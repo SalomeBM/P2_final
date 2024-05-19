@@ -27,12 +27,9 @@ public:
         return numEstaciones;
     }
 
-    void agregarEstacion(Estacion* estacion);
+    void agregarEstacion(Estacion* estacion, int posicion = -1);
 
-    bool eliminarEstacion(Estacion* estacion) {
-        // Implementa la logica para eliminar una estacion de la linea
-        return false;
-    }
+    bool eliminarEstacion(Estacion* estacion);
 
     bool tieneTransferencia() const {
         return tieneEstacionTransferencia;
@@ -148,20 +145,69 @@ public:
 };
 
 // Definicion del metodo agregarEstacion de la clase Linea
-void Linea::agregarEstacion(Estacion* estacion) {
-    if (!primeraEstacion) {
+void Linea::agregarEstacion(Estacion* estacion, int posicion) {
+    if (posicion == -1 || posicion >= numEstaciones) { // Añadir al final
+        if (!primeraEstacion) {
+            primeraEstacion = estacion;
+            ultimaEstacion = estacion;
+        } else {
+            ultimaEstacion->setSiguiente(estacion);
+            estacion->setAnterior(ultimaEstacion);
+            ultimaEstacion = estacion;
+        }
+    } else if (posicion == 0) { // Añadir al principio
+        estacion->setSiguiente(primeraEstacion);
+        primeraEstacion->setAnterior(estacion);
         primeraEstacion = estacion;
-        ultimaEstacion = estacion;
-    } else {
-        ultimaEstacion->setSiguiente(estacion);
-        ultimaEstacion = estacion;
+    } else { // Añadir en una posición intermedia
+        Estacion* actual = primeraEstacion;
+        for (int i = 0; i < posicion - 1 && actual->getSiguiente(); ++i) {
+            actual = actual->getSiguiente();
+        }
+        estacion->setSiguiente(actual->getSiguiente());
+        estacion->setAnterior(actual);
+        if (actual->getSiguiente()) {
+            actual->getSiguiente()->setAnterior(estacion);
+        }
+        actual->setSiguiente(estacion);
     }
+
     numEstaciones++;
 
     // Si la estacion agregada es de transferencia, marcar la linea
     if (estacion->tieneTransferencia()) {
         marcarTransferencia();
     }
+}
+
+// Implementacion del metodo eliminarEstacion de la clase Linea
+bool Linea::eliminarEstacion(Estacion* estacion) {
+    if (primeraEstacion == nullptr) {
+        return false;
+    }
+
+    Estacion* actual = primeraEstacion;
+    while (actual) {
+        if (actual == estacion) {
+            if (actual == primeraEstacion && actual == ultimaEstacion) {
+                primeraEstacion = ultimaEstacion = nullptr;
+            } else if (actual == primeraEstacion) {
+                primeraEstacion = actual->getSiguiente();
+                primeraEstacion->setAnterior(nullptr);
+            } else if (actual == ultimaEstacion) {
+                ultimaEstacion = actual->getAnterior();
+                ultimaEstacion->setSiguiente(nullptr);
+            } else {
+                actual->getAnterior()->setSiguiente(actual->getSiguiente());
+                actual->getSiguiente()->setAnterior(actual->getAnterior());
+            }
+            numEstaciones--;
+            delete actual;
+            return true;
+        }
+        actual = actual->getSiguiente();
+    }
+    return false;
 }
 
 class Red {
@@ -192,7 +238,7 @@ public:
                 cout << " (con estacion de transferencia)";
             }
             cout << endl;
-            Estacion* tempEstacion = tempLinea->obtenerPrimeraEstacion(); // Usar el nuevo metodo
+            Estacion* tempEstacion = tempLinea->obtenerPrimeraEstacion();
             while (tempEstacion) {
                 cout << "- Estacion: " << tempEstacion->getNombre() << endl;
                 tempEstacion = tempEstacion->getSiguiente();
@@ -237,7 +283,7 @@ public:
     }
 
     void mostrarMenu() {
-        cout << "Menu de opciones:" << endl;
+        cout << endl << "Menu de opciones:" << endl;
         cout << "1. Crear estacion" << endl;
         cout << "2. Eliminar estacion" << endl;
         cout << "3. Crear linea" << endl;
@@ -257,7 +303,87 @@ public:
         Linea* nuevaLinea = new Linea(nombreLinea);
         agregarLinea(nuevaLinea);
 
-        cout << "Linea creada exitosamente." << endl;
+        cout << endl<< "Linea creada exitosamente." << endl << endl;
+    }
+
+    void crearEstacion() {
+        string nombreEstacion, nombreLinea;
+        char esTransferencia;
+
+        cout << "Ingrese el nombre de la estacion: ";
+        cin >> nombreEstacion;
+
+        cout << "Ingrese el nombre de la linea a la que desea agregar la estacion: ";
+        cin >> nombreLinea;
+
+        cout << "Es una estacion de transferencia? (s/n): ";
+        cin >> esTransferencia;
+
+        Linea* linea = primeraLinea;
+        while (linea) {
+            if (linea->getNombre() == nombreLinea) {
+                Estacion* nuevaEstacion = new Estacion(nombreEstacion);
+                if (esTransferencia == 's' || esTransferencia == 'S') {
+                    nuevaEstacion->agregarLinea(linea);
+                    nuevaEstacion->tieneTransferencia();
+                }
+
+                // Mostrar las estaciones existentes y pedir la posición
+                Estacion* tempEstacion = linea->obtenerPrimeraEstacion();
+                cout << "Estaciones existentes en la linea:" << endl;
+                int posicion = 0;
+                while (tempEstacion) {
+                    cout << posicion << ". " << tempEstacion->getNombre() << endl;
+                    tempEstacion = tempEstacion->getSiguiente();
+                    posicion++;
+                }
+                cout << posicion << ". (Agregar al final)" << endl;
+
+                int opcionPosicion;
+                cout << "Ingrese el numero de posicion donde desea agregar la nueva estacion: ";
+                cin >> opcionPosicion;
+
+                linea->agregarEstacion(nuevaEstacion, opcionPosicion);
+                cout << "Estacion creada exitosamente." << endl;
+                return;
+            }
+            linea = linea->getSiguiente();
+        }
+
+        cout << "La linea especificada no existe en la red." << endl;
+    }
+
+    void eliminarEstacion() {
+        string nombreEstacion, nombreLinea;
+
+        cout << "Ingrese el nombre de la estacion que desea eliminar: ";
+        cin >> nombreEstacion;
+
+        cout << "Ingrese el nombre de la linea a la que pertenece la estacion: ";
+        cin >> nombreLinea;
+
+        Linea* linea = primeraLinea;
+        while (linea) {
+            if (linea->getNombre() == nombreLinea) {
+                Estacion* estacion = linea->obtenerPrimeraEstacion();
+                while (estacion) {
+                    if (estacion->getNombre() == nombreEstacion) {
+                        if (linea->eliminarEstacion(estacion)) {
+                            cout << "Estacion eliminada exitosamente." << endl;
+                        } else {
+                            cout << "No se pudo eliminar la estacion." << endl;
+                        }
+                        return;
+                    }
+                    estacion = estacion->getSiguiente();
+                }
+                cout << "La estacion especificada no existe en la linea." << endl;
+                return;
+            }
+            linea = linea->getSiguiente();
+        }
+
+        cout << "La linea especificada no existe en la red." << endl;
     }
 };
 
@@ -273,19 +399,19 @@ int main() {
     do {
         red.mostrarMenu();
         cin >> opcion;
-        cout << endl;
+        cout<<endl;
 
         switch (opcion) {
         case 1:
-            // Implementa la logica para crear una estacion
+            red.crearEstacion();
             break;
         case 2:
-            // Implementa la logica para eliminar una estacion
+            red.eliminarEstacion();
             break;
         case 3:
-            red.crearLinea(); // Crear linea en la red
+            red.crearLinea();
             break;
-        case 4: {
+        case 4:{
             string nombreLinea;
             cout << "Ingrese el nombre de la linea que desea eliminar: ";
             cin >> nombreLinea;
@@ -308,17 +434,16 @@ int main() {
             break;
         }
         case 5:
-            // Implementa la logica para calcular el tiempo de desplazamiento entre estaciones
+            // Implementar la opcion de calcular tiempo de desplazamiento
             break;
         case 6:
-            cout << "¡Hasta luego!" << endl;
+            cout << "¡Hasta luego!." << endl;
             break;
         case 7:
             red.mostrarEstructura();
-            cout << endl;
             break;
         default:
-            cout << "Opcion no valida. Por favor, seleccione una opcion valida." << endl;
+            cout << "Opcion no valida. Intente de nuevo." << endl;
             break;
         }
     } while (opcion != 6);

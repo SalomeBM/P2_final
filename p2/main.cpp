@@ -66,8 +66,9 @@ private:
     int numLineas;
     Estacion* anterior;
     Estacion* siguiente;
+    bool esTransferencia;
 
-    // Metodos privados para el manejo de memoria
+    // Métodos privados para el manejo de memoria
     void expandirCapacidad() {
         int nuevaCapacidad = capacidadLineas * 2;
         Linea** temp = new Linea*[nuevaCapacidad];
@@ -80,7 +81,7 @@ private:
     }
 
 public:
-    Estacion(string _nombre) : nombre(_nombre), lineas(nullptr), capacidadLineas(5), numLineas(0), anterior(nullptr), siguiente(nullptr) {
+    Estacion(string _nombre) : nombre(_nombre), lineas(nullptr), capacidadLineas(5), numLineas(0), anterior(nullptr), siguiente(nullptr), esTransferencia(false) {
         lineas = new Linea*[capacidadLineas];
     }
 
@@ -108,6 +109,14 @@ public:
         return siguiente;
     }
 
+    void setTransferencia(bool transferencia) {
+        esTransferencia = transferencia;
+    }
+
+    bool getTransferencia() const {
+        return esTransferencia;
+    }
+
     void agregarLinea(Linea* linea) {
         if (numLineas == capacidadLineas) {
             expandirCapacidad();
@@ -125,12 +134,7 @@ public:
     }
 
     bool tieneTransferencia() const {
-        for (int i = 0; i < numLineas; ++i) {
-            if (lineas[i]->tieneTransferencia()) {
-                return true;
-            }
-        }
-        return false;
+        return esTransferencia;
     }
 
     bool eliminarEstacion(Estacion* estacion) {
@@ -240,7 +244,11 @@ public:
             cout << endl;
             Estacion* tempEstacion = tempLinea->obtenerPrimeraEstacion();
             while (tempEstacion) {
-                cout << "- Estacion: " << tempEstacion->getNombre() << endl;
+                cout << "- Estacion: " << tempEstacion->getNombre();
+                if (tempEstacion->getTransferencia()) {
+                    cout << " (estacion de transferencia)";
+                }
+                cout << endl;
                 tempEstacion = tempEstacion->getSiguiente();
             }
             tempLinea = tempLinea->getSiguiente();
@@ -316,16 +324,22 @@ public:
         cout << "Ingrese el nombre de la linea a la que desea agregar la estacion: ";
         cin >> nombreLinea;
 
-        cout << "Es una estacion de transferencia? (s/n): ";
-        cin >> esTransferencia;
+        // Validación de la entrada para la transferencia
+        do {
+            cout << "Es una estacion de transferencia? (s/n): ";
+            cin >> esTransferencia;
+            if (esTransferencia != 's' && esTransferencia != 'S' && esTransferencia != 'n' && esTransferencia != 'N') {
+                cout << "Entrada no válida. Por favor ingrese 's', 'S', 'n' o 'N'." << endl;
+            }
+        } while (esTransferencia != 's' && esTransferencia != 'S' && esTransferencia != 'n' && esTransferencia != 'N');
 
         Linea* linea = primeraLinea;
         while (linea) {
             if (linea->getNombre() == nombreLinea) {
                 Estacion* nuevaEstacion = new Estacion(nombreEstacion);
                 if (esTransferencia == 's' || esTransferencia == 'S') {
+                    nuevaEstacion->setTransferencia(true);
                     nuevaEstacion->agregarLinea(linea);
-                    nuevaEstacion->tieneTransferencia();
                 }
 
                 // Mostrar las estaciones existentes y pedir la posición
@@ -350,8 +364,10 @@ public:
             linea = linea->getSiguiente();
         }
 
-        cout << "La linea especificada no existe en la red." << endl;
+        cout << endl << "La linea especificada no existe en la red." << endl;
     }
+
+
 
     void eliminarEstacion() {
         string nombreEstacion, nombreLinea;
@@ -383,7 +399,7 @@ public:
             linea = linea->getSiguiente();
         }
 
-        cout << "La linea especificada no existe en la red." << endl;
+        cout << endl << "La linea especificada no existe en la red." << endl;
     }
 };
 
@@ -429,7 +445,7 @@ int main() {
             if (lineaEliminar) {
                 red.eliminarLinea(lineaEliminar);
             } else {
-                cout << "La linea especificada no existe en la red." << endl;
+                cout << endl << "La linea especificada no existe en la red." << endl;
             }
             break;
         }

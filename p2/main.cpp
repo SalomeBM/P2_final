@@ -323,6 +323,7 @@ public:
         cout << endl<< "Linea creada exitosamente." << endl << endl;
     }
 
+
     void crearEstacion() {
         string nombreEstacion, nombreLinea;
         char esTransferencia;
@@ -348,9 +349,36 @@ public:
                 Estacion* nuevaEstacion = new Estacion(nombreEstacion);
                 if (esTransferencia == 's' || esTransferencia == 'S') {
                     nuevaEstacion->setTransferencia(true);
-                    nuevaEstacion->agregarLinea(linea);
-                }
 
+                    // Mostrar las líneas existentes para seleccionar la transferencia
+                    cout << "Lineas existentes en la red:" << endl;
+                    Linea* tempLinea = primeraLinea;
+                    while (tempLinea) {
+                        cout << "- " << tempLinea->getNombre() << endl;
+                        tempLinea = tempLinea->getSiguiente();
+                    }
+
+                    // Pedir al usuario que seleccione las líneas para la transferencia
+                    string nombreOtraLinea;
+                    cout << "Ingrese el nombre de otra linea para la transferencia: ";
+                    cin >> nombreOtraLinea;
+
+                    // Validar si la línea seleccionada existe
+                    Linea* otraLinea = primeraLinea;
+                    while (otraLinea) {
+                        if (otraLinea->getNombre() == nombreOtraLinea) {
+                            nuevaEstacion->agregarLinea(otraLinea);
+                            break;
+                        }
+                        otraLinea = otraLinea->getSiguiente();
+                    }
+
+                    if (!otraLinea) {
+                        cout << "La linea especificada no existe en la red." << endl;
+                        delete nuevaEstacion; // Liberar memoria si la línea no existe
+                        return;
+                    }
+                }
                 // Mostrar las estaciones existentes y pedir la posición
                 Estacion* tempEstacion = linea->obtenerPrimeraEstacion();
                 cout << "Estaciones existentes en la linea:" << endl;
@@ -391,6 +419,8 @@ public:
 
         cout << endl << "La linea especificada no existe en la red." << endl;
     }
+
+
 
     void eliminarEstacion() {
         string nombreEstacion, nombreLinea;

@@ -152,6 +152,14 @@ public:
     int getTiempoSiguiente() const {
         return tiempoSiguiente;
     }
+
+    Linea** getLineas() const {
+        return lineas;
+    }
+
+    int getNumeroLineas() const {
+        return numLineas;
+    }
 };
 
 // Definicion del metodo agregarEstacion de la clase Linea
@@ -252,7 +260,12 @@ public:
             while (tempEstacion) {
                 cout << "- Estacion: " << tempEstacion->getNombre();
                 if (tempEstacion->getTransferencia()) {
-                    cout << " (estacion de transferencia)";
+                    cout << " - estacion con transferencia a la estación: ";
+                    // Obtener las líneas conectadas a esta estación de transferencia
+                    Linea** lineas = tempEstacion->getLineas();
+                    for (int i = 0; i < tempEstacion->getNumeroLineas(); ++i) {
+                        cout << " " << lineas[i]->getNombre();
+                    }
                 }
                 if (tempEstacion->getSiguiente()) {
                     cout << " (" << tempEstacion->getTiempoSiguiente() << " minutos)";
@@ -263,6 +276,7 @@ public:
             tempLinea = tempLinea->getSiguiente();
         }
     }
+
 
     Linea* getPrimeraLinea() const {
         return primeraLinea;
@@ -420,8 +434,6 @@ public:
         cout << endl << "La linea especificada no existe en la red." << endl;
     }
 
-
-
     void eliminarEstacion() {
         string nombreEstacion, nombreLinea;
 
@@ -437,6 +449,11 @@ public:
                 Estacion* estacion = linea->obtenerPrimeraEstacion();
                 while (estacion) {
                     if (estacion->getNombre() == nombreEstacion) {
+                        // Verificar si la estación es una estación de transferencia
+                        if (estacion->getTransferencia()) {
+                            cout << endl << "No se puede eliminar una estacion de transferencia." << endl;
+                            return;
+                        }
                         if (linea->eliminarEstacion(estacion)) {
                             cout << "Estacion eliminada exitosamente." << endl;
                         } else {
@@ -454,6 +471,7 @@ public:
 
         cout << endl << "La linea especificada no existe en la red." << endl;
     }
+
 };
 
 int calcularTiempoDeLlegada(Estacion* origen, Estacion* destino) {

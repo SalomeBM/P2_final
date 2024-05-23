@@ -260,7 +260,7 @@ public:
             while (tempEstacion) {
                 cout << "- Estacion: " << tempEstacion->getNombre();
                 if (tempEstacion->getTransferencia()) {
-                    cout << " - estacion con transferencia a la estación: ";
+                    cout << " - estacion con transferencia a la estacion: ";
                     // Obtener las líneas conectadas a esta estación de transferencia
                     Linea** lineas = tempEstacion->getLineas();
                     for (int i = 0; i < tempEstacion->getNumeroLineas(); ++i) {
@@ -353,7 +353,7 @@ public:
             cout << "Es una estacion de transferencia? (s/n): ";
             cin >> esTransferencia;
             if (esTransferencia != 's' && esTransferencia != 'S' && esTransferencia != 'n' && esTransferencia != 'N') {
-                cout << "Entrada no válida. Por favor ingrese 's', 'S', 'n' o 'N'." << endl;
+                cout << "Entrada no valida. Por favor ingrese 's', 'S', 'n' o 'N'." << endl;
             }
         } while (esTransferencia != 's' && esTransferencia != 'S' && esTransferencia != 'n' && esTransferencia != 'N');
 
@@ -374,14 +374,27 @@ public:
 
                     // Pedir al usuario que seleccione las líneas para la transferencia
                     string nombreOtraLinea;
-                    cout << "Ingrese el nombre de otra linea para la transferencia: ";
-                    cin >> nombreOtraLinea;
+                    do {
+                        cout << "Ingrese el nombre de otra linea para la transferencia (diferente de " << nombreLinea << "): ";
+                        cin >> nombreOtraLinea;
+
+                        if (nombreOtraLinea == nombreLinea) {
+                            cout << "No puede seleccionar la misma linea para la transferencia." << endl;
+                        }
+                    } while (nombreOtraLinea == nombreLinea);
 
                     // Validar si la línea seleccionada existe
                     Linea* otraLinea = primeraLinea;
                     while (otraLinea) {
                         if (otraLinea->getNombre() == nombreOtraLinea) {
                             nuevaEstacion->agregarLinea(otraLinea);
+                            otraLinea->marcarTransferencia();  // Marcar la otra línea como que tiene estación de transferencia
+
+                            // Crear la estación correspondiente en la otra línea
+                            Estacion* estacionTransferencia = new Estacion(nombreEstacion);
+                            estacionTransferencia->setTransferencia(true);
+                            estacionTransferencia->agregarLinea(linea);  // Conectar esta estación con la línea original
+                            otraLinea->agregarEstacion(estacionTransferencia);  // Agregar la estación a la otra línea
                             break;
                         }
                         otraLinea = otraLinea->getSiguiente();
@@ -433,6 +446,8 @@ public:
 
         cout << endl << "La linea especificada no existe en la red." << endl;
     }
+
+
 
     void eliminarEstacion() {
         string nombreEstacion, nombreLinea;

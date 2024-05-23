@@ -282,6 +282,17 @@ public:
         return primeraLinea;
     }
 
+    Linea* buscarLineaPorNombre(const string& nombreLinea) const {
+        Linea* tempLinea = primeraLinea;
+        while (tempLinea) {
+            if (tempLinea->getNombre() == nombreLinea) {
+                return tempLinea;
+            }
+            tempLinea = tempLinea->getSiguiente();
+        }
+        return nullptr;
+    }
+
     void eliminarLinea(Linea* linea) {
         // Verificar si la linea tiene estaciones de transferencia
         if (linea->tieneTransferencia()) {
@@ -328,13 +339,24 @@ public:
     // Metodo para crear una linea en la red
     void crearLinea() {
         string nombreLinea;
-        cout << "Ingrese el nombre de la linea: ";
-        cin >> nombreLinea;
+        bool nombreValido = false;
+
+        while (!nombreValido) {
+            cout << "Ingrese el nombre de la linea: ";
+            cin >> nombreLinea;
+
+            // Validar si la línea ya existe
+            if (buscarLineaPorNombre(nombreLinea) != nullptr) {
+                cout << "Error: Una linea con ese nombre ya existe en la red. Por favor, ingrese un nombre diferente." << endl;
+            } else {
+                nombreValido = true;
+            }
+        }
 
         Linea* nuevaLinea = new Linea(nombreLinea);
         agregarLinea(nuevaLinea);
 
-        cout << endl<< "Linea creada exitosamente." << endl << endl;
+        cout << endl << "Linea creada exitosamente." << endl << endl;
     }
 
 
@@ -401,7 +423,7 @@ public:
                     }
 
                     if (!otraLinea) {
-                        cout << "La linea especificada no existe en la red." << endl;
+                        cout << endl << "La linea especificada no existe en la red." << endl;
                         delete nuevaEstacion; // Liberar memoria si la línea no existe
                         return;
                     }
@@ -438,7 +460,7 @@ public:
 
                 // Agregar la nueva estación a la línea
                 linea->agregarEstacion(nuevaEstacion, opcionPosicion, tiempoAnterior, tiempoSiguiente);
-                cout << "Estacion creada exitosamente." << endl;
+                cout << endl << "Estacion creada exitosamente." << endl;
                 return;
             }
             linea = linea->getSiguiente();
@@ -501,26 +523,18 @@ int main() {
     do {
         red.mostrarMenu();
         cin >> opcion;
-        cout<<endl;
+        cout << endl;
 
         switch (opcion) {
         case 1:
             red.crearLinea();
             break;
-        case 2:{
+        case 2: {
             string nombreLinea;
             cout << "Ingrese el nombre de la linea que desea eliminar: ";
             cin >> nombreLinea;
 
-            Linea* lineaEliminar = nullptr;
-            Linea* tempLinea = red.getPrimeraLinea();
-            while (tempLinea) {
-                if (tempLinea->getNombre() == nombreLinea) {
-                    lineaEliminar = tempLinea;
-                    break;
-                }
-                tempLinea = tempLinea->getSiguiente();
-            }
+            Linea* lineaEliminar = red.buscarLineaPorNombre(nombreLinea);
 
             if (lineaEliminar) {
                 red.eliminarLinea(lineaEliminar);
@@ -532,12 +546,12 @@ int main() {
         case 3:
             red.crearEstacion();
             break;
-        case 4:{
+        case 4: {
             red.eliminarEstacion();
             break;
         }
         case 5:
-            // Implementar la opcion de calcular tiempo de desplazamiento
+            // Implementar la opción de calcular tiempo de desplazamiento
             break;
         case 6:
             cout << "¡Hasta luego!." << endl;
@@ -546,10 +560,11 @@ int main() {
             red.mostrarEstructura();
             break;
         default:
-            cout << "Opcion no valida. Intente de nuevo." << endl;
+            cout << "Opción no valida. Intente de nuevo." << endl;
             break;
         }
     } while (opcion != 6);
 
     return 0;
 }
+

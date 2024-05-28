@@ -347,8 +347,8 @@ public:
         cout << "3. Crear estacion" << endl;
         cout << "4. Eliminar estacion" << endl;
         cout << "5. Calcular tiempo de desplazamiento entre estaciones" << endl;
-        cout << "6. Salir" << endl;
-        cout << "7. Mostrar lineas" << endl;
+        cout << "6. Mostrar lineas" << endl;
+        cout << "7. Salir" << endl;
         cout << "Seleccione una opcion: ";
     }
 
@@ -550,9 +550,12 @@ int main() {
 
         switch (opcion) {
         case 1:
+            //system("cls");
             red.crearLinea();
             break;
-        case 2: {
+        case 2:
+            //system("cls");
+            {
             string nombreLinea;
             cout << "Ingrese el nombre de la linea que desea eliminar: ";
             cin >> nombreLinea;
@@ -567,26 +570,33 @@ int main() {
             break;
         }
         case 3:
+            //system("cls");
             red.crearEstacion();
             break;
-        case 4: {
+        case 4:
+            //system("cls");
+            {
             red.eliminarEstacion();
             break;
         }
         case 5:
+            //system("cls");
             // Implementar la opción de calcular tiempo de desplazamiento
             break;
         case 6:
-            cout << "¡Hasta luego!." << endl;
-            break;
-        case 7:
+            //system("cls");
             red.mostrarEstructura();
             break;
+        case 7:
+            //system("cls");
+            cout << "Hasta luego!." << endl;
+            break;
         default:
-            cout << "Opción no valida. Intente de nuevo." << endl;
+            //system("cls");
+            cout << "Opcion no valida. Intente de nuevo." << endl;
             break;
         }
-    } while (opcion != 6);
+    } while (opcion != 7);
 
     return 0;
 }

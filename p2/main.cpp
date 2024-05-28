@@ -237,6 +237,22 @@ private:
 public:
     Red() : primeraLinea(nullptr), ultimaLinea(nullptr), numLineas(0) {}
 
+    Estacion* buscarEstacionPorNombre(const string& nombreEstacion) const {
+        Linea* tempLinea = primeraLinea;
+        while (tempLinea) {
+            Estacion* tempEstacion = tempLinea->obtenerPrimeraEstacion();
+            while (tempEstacion) {
+                if (tempEstacion->getNombre() == nombreEstacion) {
+                    return tempEstacion;
+                }
+                tempEstacion = tempEstacion->getSiguiente();
+            }
+            tempLinea = tempLinea->getSiguiente();
+        }
+        return nullptr;
+    }
+
+
     void agregarLinea(Linea* linea) {
         if (!primeraLinea) {
             primeraLinea = linea;
@@ -367,6 +383,12 @@ public:
         cout << "Ingrese el nombre de la estacion: ";
         cin >> nombreEstacion;
 
+        // Validar si la estación ya existe
+        if (buscarEstacionPorNombre(nombreEstacion) != nullptr) {
+            cout << endl << "Error: Ya existe una estacion con ese nombre. Por favor, intentelo de nuevo." << endl;
+            return;
+        }
+
         cout << "Ingrese el nombre de la linea a la que desea agregar la estacion: ";
         cin >> nombreLinea;
 
@@ -468,6 +490,7 @@ public:
 
         cout << endl << "La linea especificada no existe en la red." << endl;
     }
+
 
 
 

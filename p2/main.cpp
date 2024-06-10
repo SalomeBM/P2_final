@@ -1,5 +1,8 @@
 #include <iostream>
 #include <string>
+#include <limits>
+#include <cctype>
+#include <ctime>
 
 using namespace std;
 
@@ -39,10 +42,7 @@ public:
         tieneEstacionTransferencia = true;
     }
 
-    int tiempoDeViaje(Estacion* origen, Estacion* destino) const {
-        // Implementa la logica para calcular el tiempo de viaje entre dos estaciones en la linea
-        return 0;
-    }
+    int tiempoDeViaje(Estacion* origen, Estacion* destino) const;
 
     Linea* getSiguiente() const {
         return siguiente;
@@ -145,7 +145,6 @@ public:
     }
 
     int tiempoDeViaje(Estacion* origen, Estacion* destino) const {
-        // Implementa la logica para calcular el tiempo de viaje entre dos estaciones
         return 0;
     }
 
@@ -182,12 +181,18 @@ void Linea::agregarEstacion(Estacion* estacion, int posicion, int tiempoAnterior
         for (int i = 0; i < posicion - 1 && actual->getSiguiente(); ++i) {
             actual = actual->getSiguiente();
         }
-        estacion->setSiguiente(actual->getSiguiente(), tiempoSiguiente);
+        Estacion* siguienteEstacion = actual->getSiguiente();
+
+        estacion->setSiguiente(siguienteEstacion, tiempoSiguiente);
         estacion->setAnterior(actual);
-        if (actual->getSiguiente()) {
-            actual->getSiguiente()->setAnterior(estacion);
+
+        if (siguienteEstacion) {
+            siguienteEstacion->setAnterior(estacion);
+            // Actualizar el tiempo de viaje de la estación anterior a la estación actual
+            siguienteEstacion->setSiguiente(siguienteEstacion->getSiguiente(), tiempoSiguiente);
         }
-        actual->setSiguiente(estacion, tiempoSiguiente);
+
+        actual->setSiguiente(estacion, tiempoAnterior);
     }
 
     numEstaciones++;
@@ -197,6 +202,7 @@ void Linea::agregarEstacion(Estacion* estacion, int posicion, int tiempoAnterior
         marcarTransferencia();
     }
 }
+
 
 // Implementacion del metodo eliminarEstacion de la clase Linea
 bool Linea::eliminarEstacion(Estacion* estacion) {
@@ -226,6 +232,27 @@ bool Linea::eliminarEstacion(Estacion* estacion) {
         actual = actual->getSiguiente();
     }
     return false;
+}
+
+int Linea::tiempoDeViaje(Estacion* origen, Estacion* destino) const {
+    int tiempoTotal = 0;
+    Estacion* actual = primeraEstacion;
+    bool contando = false;
+
+    while (actual) {
+        if (actual == origen) {
+            contando = true;
+        }
+        if (contando) {
+            tiempoTotal += actual->getTiempoSiguiente();
+        }
+        if (actual == destino) {
+            break;
+        }
+        actual = actual->getSiguiente();
+    }
+
+    return (contando && actual == destino) ? tiempoTotal : -1; // Retorna -1 si las estaciones no están en la misma línea o en el orden correcto
 }
 
 class Red {
@@ -294,6 +321,8 @@ public:
     }
 
 
+
+
     Linea* getPrimeraLinea() const {
         return primeraLinea;
     }
@@ -347,8 +376,8 @@ public:
         cout << "3. Crear estacion" << endl;
         cout << "4. Eliminar estacion" << endl;
         cout << "5. Calcular tiempo de desplazamiento entre estaciones" << endl;
-        cout << "6. Mostrar lineas" << endl;
-        cout << "7. Salir" << endl;
+        cout << "6. Salir" << endl;
+        cout << "7. Mostrar lineas" << endl;
         cout << "Seleccione una opcion: ";
     }
 
@@ -476,8 +505,8 @@ public:
                     cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente: ";
                     cin >> tiempoSiguiente;
                 } else if (opcionPosicion == posicion) {
-                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion anterior: ";
-                    cin >> tiempoAnterior;
+                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente: ";
+                    cin >> tiempoSiguiente;
                 }
 
                 // Agregar la nueva estación a la línea
@@ -490,8 +519,6 @@ public:
 
         cout << endl << "La linea especificada no existe en la red." << endl;
     }
-
-
 
 
     void eliminarEstacion() {
@@ -532,12 +559,63 @@ public:
         cout << endl << "La linea especificada no existe en la red." << endl;
     }
 
+    void calcularTiempoDeDesplazamiento() {
+        string nombreLinea, nombreEstacionOrigen, nombreEstacionDestino;
+
+        cout << "Ingrese el nombre de la linea: ";
+        cin >> nombreLinea;
+        cout << "Ingrese el nombre de la estacion de origen: ";
+        cin >> nombreEstacionOrigen;
+        cout << "Ingrese el nombre de la estacion de destino: ";
+        cin >> nombreEstacionDestino;
+
+        Linea* linea = buscarLineaPorNombre(nombreLinea);
+        if (!linea) {
+            cout << "La linea especificada no existe en la red." << endl;
+            return;
+        }
+
+        Estacion* estacionOrigen = buscarEstacionPorNombre(nombreEstacionOrigen);
+        Estacion* estacionDestino = buscarEstacionPorNombre(nombreEstacionDestino);
+
+        if (!estacionOrigen || !estacionDestino) {
+            cout << "Una o ambas estaciones especificadas no existen." << endl;
+            return;
+        }
+
+        int tiempo = linea->tiempoDeViaje(estacionOrigen, estacionDestino);
+        if (tiempo == -1) {
+            cout << "Las estaciones no están en la misma línea o no se pudo calcular el tiempo de viaje." << endl;
+        } else {
+            cout << "El tiempo de viaje entre " << nombreEstacionOrigen << " y " << nombreEstacionDestino << " es de " << tiempo << " minutos." << endl;
+        }
+    }
+
 };
 
-int calcularTiempoDeLlegada(Estacion* origen, Estacion* destino) {
-    // Implementa la logica para calcular el tiempo de llegada
-    return 0;
+// Función para verificar que la entrada no sea un número
+int entradaSoloNumeros() {
+    string input;
+    int opcion;
+    bool valid = false;
+    while (!valid) {
+        cin >> input;
+        valid = true;
+        for (char c : input) {
+            if (!isdigit(c)) {
+                valid = false;
+                break;
+            }
+        }
+        if (valid) {
+            opcion = stoi(input);
+        } else {
+            cout << "Opción invalida, intente de nuevo, ingrese solamente numeros: ";
+        }
+    }
+    return opcion;
 }
+
 
 int main() {
     Red red;
@@ -545,17 +623,14 @@ int main() {
     cout << "Bienvenido al sistema de gestion de la red de metro." << endl;
     do {
         red.mostrarMenu();
-        cin >> opcion;
+        opcion = entradaSoloNumeros();
         cout << endl;
 
         switch (opcion) {
         case 1:
-            //system("cls");
             red.crearLinea();
             break;
-        case 2:
-            //system("cls");
-            {
+        case 2: {
             string nombreLinea;
             cout << "Ingrese el nombre de la linea que desea eliminar: ";
             cin >> nombreLinea;
@@ -570,34 +645,26 @@ int main() {
             break;
         }
         case 3:
-            //system("cls");
             red.crearEstacion();
             break;
-        case 4:
-            //system("cls");
-            {
+        case 4: {
             red.eliminarEstacion();
             break;
         }
         case 5:
-            //system("cls");
-            // Implementar la opción de calcular tiempo de desplazamiento
+            red.calcularTiempoDeDesplazamiento();
             break;
         case 6:
-            //system("cls");
-            red.mostrarEstructura();
+            cout << "¡Hasta luego!." << endl;
             break;
         case 7:
-            //system("cls");
-            cout << "Hasta luego!." << endl;
+            red.mostrarEstructura();
             break;
         default:
-            //system("cls");
-            cout << "Opcion no valida. Intente de nuevo." << endl;
+            cout << "Opción no valida. Intente de nuevo." << endl;
             break;
         }
-    } while (opcion != 7);
+    } while (opcion != 6);
 
     return 0;
 }
-

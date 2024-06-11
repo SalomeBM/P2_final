@@ -320,9 +320,6 @@ public:
         }
     }
 
-
-
-
     Linea* getPrimeraLinea() const {
         return primeraLinea;
     }
@@ -467,7 +464,38 @@ public:
                             Estacion* estacionTransferencia = new Estacion(nombreEstacion);
                             estacionTransferencia->setTransferencia(true);
                             estacionTransferencia->agregarLinea(linea);  // Conectar esta estación con la línea original
-                            otraLinea->agregarEstacion(estacionTransferencia);  // Agregar la estación a la otra línea
+
+                            // Mostrar las estaciones existentes y pedir la posición en la otra línea
+                            Estacion* tempEstacionOtra = otraLinea->obtenerPrimeraEstacion();
+                            cout << "Estaciones existentes en la linea " << nombreOtraLinea << ":" << endl;
+                            int posicionOtra = 0;
+                            while (tempEstacionOtra) {
+                                cout << posicionOtra << ". " << tempEstacionOtra->getNombre() << endl;
+                                tempEstacionOtra = tempEstacionOtra->getSiguiente();
+                                posicionOtra++;
+                            }
+                            cout << posicionOtra << ". (Agregar al final)" << endl;
+
+                            int opcionPosicionOtra;
+                            cout << "Ingrese el numero de posicion donde desea agregar la nueva estacion en la linea " << nombreOtraLinea << ": ";
+                            cin >> opcionPosicionOtra;
+
+                            // Solicitar tiempos de viaje entre estaciones en la otra línea
+                            int tiempoAnteriorOtra = 0, tiempoSiguienteOtra = 0;
+                            if (opcionPosicionOtra > 0 && opcionPosicionOtra < posicionOtra) {
+                                cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion anterior en la linea " << nombreOtraLinea << ": ";
+                                cin >> tiempoAnteriorOtra;
+                                cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente en la linea " << nombreOtraLinea << ": ";
+                                cin >> tiempoSiguienteOtra;
+                            } else if (opcionPosicionOtra == 0) {
+                                cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente en la linea " << nombreOtraLinea << ": ";
+                                cin >> tiempoSiguienteOtra;
+                            } else if (opcionPosicionOtra == posicionOtra) {
+                                cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion anterior en la linea " << nombreOtraLinea << ": ";
+                                cin >> tiempoAnteriorOtra;
+                            }
+
+                            otraLinea->agregarEstacion(estacionTransferencia, opcionPosicionOtra, tiempoAnteriorOtra, tiempoSiguienteOtra);
                             break;
                         }
                         otraLinea = otraLinea->getSiguiente();
@@ -481,7 +509,7 @@ public:
                 }
                 // Mostrar las estaciones existentes y pedir la posición
                 Estacion* tempEstacion = linea->obtenerPrimeraEstacion();
-                cout << "Estaciones existentes en la linea:" << endl;
+                cout << "Estaciones existentes en la linea " << nombreLinea << ":" << endl;
                 int posicion = 0;
                 while (tempEstacion) {
                     cout << posicion << ". " << tempEstacion->getNombre() << endl;
@@ -491,25 +519,25 @@ public:
                 cout << posicion << ". (Agregar al final)" << endl;
 
                 int opcionPosicion;
-                cout << "Ingrese el numero de posicion donde desea agregar la nueva estacion: ";
+                cout << "Ingrese el numero de posicion donde desea agregar la nueva estacion en la linea " << nombreLinea << ": ";
                 cin >> opcionPosicion;
 
-                // Solicitar tiempos de viaje entre estaciones
+                // Solicitar tiempos de viaje entre estaciones en la línea principal
                 int tiempoAnterior = 0, tiempoSiguiente = 0;
                 if (opcionPosicion > 0 && opcionPosicion < posicion) {
-                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion anterior: ";
+                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion anterior en la linea " << nombreLinea << ": ";
                     cin >> tiempoAnterior;
-                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente: ";
+                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente en la linea " << nombreLinea << ": ";
                     cin >> tiempoSiguiente;
                 } else if (opcionPosicion == 0) {
-                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente: ";
+                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente en la linea " << nombreLinea << ": ";
                     cin >> tiempoSiguiente;
                 } else if (opcionPosicion == posicion) {
-                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion siguiente: ";
-                    cin >> tiempoSiguiente;
+                    cout << "Ingrese el tiempo de viaje entre la nueva estacion y la estacion anterior en la linea " << nombreLinea << ": ";
+                    cin >> tiempoAnterior;
                 }
 
-                // Agregar la nueva estación a la línea
+                // Agregar la nueva estación a la línea principal
                 linea->agregarEstacion(nuevaEstacion, opcionPosicion, tiempoAnterior, tiempoSiguiente);
                 cout << endl << "Estacion creada exitosamente." << endl;
                 return;
@@ -519,6 +547,7 @@ public:
 
         cout << endl << "La linea especificada no existe en la red." << endl;
     }
+
 
 
     void eliminarEstacion() {
